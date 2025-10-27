@@ -51,7 +51,6 @@ export class HomePageController {
 	async getAsync(request, config) {
 		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
 
-		// to do
 		return homePageView.homePage();
 	}
 
@@ -65,7 +64,11 @@ export class HomePageController {
 		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
 
 		// to do
-		const transformedText = await this._rot13Client.transformAsync(123, "some text", "0000-0000");
+		const transformedText = await this._rot13Client.transformAsync(
+			config.rot13ServicePort,
+			"some text",
+			config.correlationId,
+		);
 	}
 
 }
