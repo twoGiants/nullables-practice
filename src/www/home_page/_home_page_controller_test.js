@@ -20,10 +20,19 @@ describe.only("Home Page Controller", () => {
 		// Challenge #1
 		it("GET renders home page", async () => {
 			// Arrange
+			const rot13Client = Rot13Client.createNull();
+			const clock = Clock.createNull();
+			const controller = new HomePageController(rot13Client, clock);
+
+			const request = HttpServerRequest.createNull();
+			const config = WwwConfig.createTestInstance();
 
 			// Act
+			const response = await controller.getAsync(request, config);
 
 			// Assert
+			const expected = homePageView.homePage();
+			assert.deepEqual(response, expected);
 		});
 
 		// Challenge #2a, 2b, 2c
