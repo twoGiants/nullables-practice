@@ -5,6 +5,7 @@ import { Rot13Client } from "../infrastructure/rot13_client.js";
 import { HttpServerRequest } from "http/http_server_request.js";
 import { WwwConfig } from "../www_config.js";
 import { Clock } from "infrastructure/clock.js";
+import { HttpServerResponse } from "http/http_server_response.js";
 
 const ENDPOINT = "/";
 const INPUT_FIELD_NAME = "text";
@@ -64,6 +65,7 @@ export class HomePageController {
 		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
 
 		// to do
+		const transformedText = await this._rot13Client.transformAsync(123, "some text", "0000-0000");
 	}
 
 }

@@ -38,10 +38,24 @@ describe.only("Home Page Controller", () => {
 		// Challenge #2a, 2b, 2c
 		it("POST asks ROT-13 service to transform text", async () => {
 			// Arrange
+			const rot13Client = Rot13Client.createNull();
+			const rot13Requests = rot13Client.trackRequests();
+		
+			const clock = Clock.createNull();
+			const controller = new HomePageController(rot13Client, clock);
+
+			const request = HttpServerRequest.createNull();
+			const config = WwwConfig.createTestInstance();
 
 			// Act
+			await controller.postAsync(request, config);
 
 			// Assert
+			assert.deepEqual(rot13Requests.data, [{
+				port: 123,
+				text: "some text",
+				correlationId: "0000-0000",
+			}]);
 		});
 
 		// Challenge #3
