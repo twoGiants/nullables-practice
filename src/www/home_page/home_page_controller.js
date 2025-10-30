@@ -64,8 +64,20 @@ export class HomePageController {
 		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
 
 		const form = await request.readBodyAsUrlEncodedFormAsync();
-		const userInput = form[INPUT_FIELD_NAME][0];
+		const textField = form[INPUT_FIELD_NAME];
+		if (textField === undefined) {
+			config.log.monitor({
+				endpoint: ENDPOINT,
+				method: "POST",
+				message: "form parse error",
+				error: `'${INPUT_FIELD_NAME}' form field not found`,
+				form,
+			});
 
+			return homePageView.homePage();
+		}
+		
+		const userInput = textField[0];
 		const output = await this._rot13Client.transformAsync(
 			config.rot13ServicePort,
 			userInput,

@@ -65,7 +65,19 @@ describe.only("Home Page Controller", () => {
 
 		// Challenge #7
 		it("fails gracefully, and logs error, when service returns error", async () => {
-			// to do
+			const { response, rot13Requests, logOutput } = await postAsync({ body: "" });
+
+			assert.deepEqual(logOutput.data, [{
+				alert: "monitor",
+				endpoint: "/",
+				method: "POST",
+				message: "form parse error",
+				error: "'text' form field not found",
+				form: {},
+			}], "should log a warning");
+
+			assert.deepEqual(response, homePageView.homePage(), "should render home page");
+			assert.deepEqual(rot13Requests.data, [], "shouldn't call ROT-13 service");
 		});
 
 		// Challenge #9
@@ -86,6 +98,9 @@ async function postAsync({
 	const rot13Client = Rot13Client.createNull([{ response: rot13Response }]);
 	const rot13Requests = rot13Client.trackRequests();
 
+	const log = Log.createNull();
+	const logOutput = log.trackOutput();
+
 	const clock = Clock.createNull();
 	const controller = new HomePageController(rot13Client, clock);
 
@@ -93,12 +108,13 @@ async function postAsync({
 		body,
 	});
 	const config = WwwConfig.createTestInstance({
+		log,
 		rot13ServicePort,
 		correlationId,
 	});
 
 	const response = await controller.postAsync(request, config);
-	return { rot13Requests, response };
+	return { rot13Requests, response, logOutput };
 }
 
 async function getAsync() {
