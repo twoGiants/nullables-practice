@@ -36,7 +36,7 @@ export class HomePageController {
 
 	/** Only for use by tests. (Use a factory method instead.) */
 	constructor(rot13Client, clock) {
-		ensure.signature(arguments, [ Rot13Client, Clock ]);
+		ensure.signature(arguments, [Rot13Client, Clock]);
 
 		this._rot13Client = rot13Client;
 		this._clock = clock;
@@ -49,7 +49,7 @@ export class HomePageController {
 	 * @returns {HttpServerResponse} HTTP response
 	 */
 	async getAsync(request, config) {
-		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
+		ensure.signature(arguments, [HttpServerRequest, WwwConfig]);  // run-time type checker (ignore me)
 
 		return homePageView.homePage();
 	}
@@ -61,23 +61,11 @@ export class HomePageController {
 	 * @returns {Promise<HttpServerResponse>} HTTP response
 	 */
 	async postAsync(request, config) {
-		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
+		ensure.signature(arguments, [HttpServerRequest, WwwConfig]);  // run-time type checker (ignore me)
 
-		const form = await request.readBodyAsUrlEncodedFormAsync();
-		const textField = form[INPUT_FIELD_NAME];
-		if (textField === undefined) {
-			config.log.monitor({
-				endpoint: ENDPOINT,
-				method: "POST",
-				message: "form parse error",
-				error: `'${INPUT_FIELD_NAME}' form field not found`,
-				form,
-			});
+		const userInput = await this.parseRequestBodyAsync(request, config.log);
+		if (userInput === null) return homePageView.homePage();
 
-			return homePageView.homePage();
-		}
-		
-		const userInput = textField[0];
 		const output = await this._rot13Client.transformAsync(
 			config.rot13ServicePort,
 			userInput,
@@ -87,4 +75,24 @@ export class HomePageController {
 		return homePageView.homePage(output);
 	}
 
+	async parseRequestBodyAsync(request, log) {
+		const form = await request.readBodyAsUrlEncodedFormAsync();
+		const textFields = form[INPUT_FIELD_NAME];
+
+		try {
+			if (textFields === undefined) throw new Error(`'${INPUT_FIELD_NAME}' form field not found`);
+			if (textFields.length !== 1) throw new Error(`should only be one '${INPUT_FIELD_NAME}' form field`);
+
+			return textFields[0];
+		} catch (err) {
+			log.monitor({
+				endpoint: ENDPOINT,
+				method: "POST",
+				message: "form parse error",
+				error: err.message,
+				form,
+			});
+			return null;
+		}
+	}
 }

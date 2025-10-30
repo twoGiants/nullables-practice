@@ -50,21 +50,6 @@ describe.only("Home Page Controller", () => {
 
 		// Challenge #5
 		it("logs warning when form field not found (and treats request like GET)", async () => {
-			// to do
-		});
-
-		// Challenge #6
-		it("logs warning when duplicated form field found (and treats request like GET)", async () => {
-			// to do
-		});
-
-	});
-
-
-	describe("ROT-13 service edge cases", () => {
-
-		// Challenge #7
-		it("fails gracefully, and logs error, when service returns error", async () => {
 			const { response, rot13Requests, logOutput } = await postAsync({ body: "" });
 
 			assert.deepEqual(logOutput.data, [{
@@ -78,6 +63,35 @@ describe.only("Home Page Controller", () => {
 
 			assert.deepEqual(response, homePageView.homePage(), "should render home page");
 			assert.deepEqual(rot13Requests.data, [], "shouldn't call ROT-13 service");
+		});
+
+		// Challenge #6
+		it("logs warning when duplicated form field found (and treats request like GET)", async () => {
+
+			const { response, rot13Requests, logOutput } = await postAsync({ body: "text=one&text=two" });
+
+			assert.deepEqual(logOutput.data, [{
+				alert: "monitor",
+				endpoint: "/",
+				method: "POST",
+				message: "form parse error",
+				error: "should only be one 'text' form field",
+				form: {
+					text: [ "one", "two" ]
+				},
+			}], "should log a warning");
+
+			assert.deepEqual(response, homePageView.homePage(), "should render home page");
+			assert.deepEqual(rot13Requests.data, [], "shouldn't call ROT-13 service");
+		});
+	});
+
+
+	describe("ROT-13 service edge cases", () => {
+
+		// Challenge #7
+		it("fails gracefully, and logs error, when service returns error", async () => {
+			// to do
 		});
 
 		// Challenge #9
