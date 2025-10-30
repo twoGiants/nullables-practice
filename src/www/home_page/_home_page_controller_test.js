@@ -19,57 +19,30 @@ describe.only("Home Page Controller", () => {
 
 		// Challenge #1
 		it("GET renders home page", async () => {
-			// Arrange
-			const rot13Client = Rot13Client.createNull();
-			const clock = Clock.createNull();
-			const controller = new HomePageController(rot13Client, clock);
-
-			const request = HttpServerRequest.createNull();
-			const config = WwwConfig.createTestInstance();
-
-			// Act
-			const response = await controller.getAsync(request, config);
-
-			// Assert
-			const expected = homePageView.homePage();
-			assert.deepEqual(response, expected);
+			const {response} = await getAsync();
+			assert.deepEqual(response, homePageView.homePage());
 		});
 
 		// Challenge #2a, 2b, 2c
 		it("POST asks ROT-13 service to transform text", async () => {
-			// Arrange
-			const rot13Client = Rot13Client.createNull();
-			const rot13Requests = rot13Client.trackRequests();
-		
-			const clock = Clock.createNull();
-			const controller = new HomePageController(rot13Client, clock);
-
-			const request = HttpServerRequest.createNull();
-			const config = WwwConfig.createTestInstance({
+			const { rot13Requests } = await postAsync({
+				body: "text=hello%20world",
 				rot13ServicePort: 999,
 				correlationId: "my-correlation-id",
 			});
 
-			// Act
-			await controller.postAsync(request, config);
-
-			// Assert
 			assert.deepEqual(rot13Requests.data, [{
 				port: 999,
-				text: "some text",
+				text: "hello world",
 				correlationId: "my-correlation-id",
 			}]);
 		});
 
 		// Challenge #3
 		it("POST renders result of ROT-13 service call", async () => {
-			// Arrange
-
-			// Act
-
-			// Assert
+			const { response } = await postAsync({ rot13Response: "my_response" });
+			assert.deepEqual(response, homePageView.homePage("my_response"));
 		});
-
 	});
 
 
@@ -103,3 +76,42 @@ describe.only("Home Page Controller", () => {
 	});
 
 });
+
+async function postAsync({
+	body = `text=${IRRELEVANT_INPUT}`,
+	rot13ServicePort = IRRELEVANT_PORT,
+	correlationId = IRRELEVANT_CORRELATION_ID,
+	rot13Response = "irrelevant ROT-13 response",
+}) {
+	const rot13Client = Rot13Client.createNull([{ response: rot13Response }]);
+	const rot13Requests = rot13Client.trackRequests();
+
+	const clock = Clock.createNull();
+	const controller = new HomePageController(rot13Client, clock);
+
+	const request = HttpServerRequest.createNull({
+		body,
+	});
+	const config = WwwConfig.createTestInstance({
+		rot13ServicePort,
+		correlationId,
+	});
+
+	const response = await controller.postAsync(request, config);
+	return { rot13Requests, response };
+}
+
+async function getAsync() {
+	const rot13Client = Rot13Client.createNull();
+	const clock = Clock.createNull();
+	const controller = new HomePageController(rot13Client, clock);
+
+	const request = HttpServerRequest.createNull();
+	const config = WwwConfig.createTestInstance();
+
+	const response = await controller.getAsync(request, config);
+	return {
+		response
+	};
+}
+

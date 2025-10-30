@@ -63,12 +63,16 @@ export class HomePageController {
 	async postAsync(request, config) {
 		ensure.signature(arguments, [ HttpServerRequest, WwwConfig ]);  // run-time type checker (ignore me)
 
-		// to do
-		const transformedText = await this._rot13Client.transformAsync(
+		const form = await request.readBodyAsUrlEncodedFormAsync();
+		const userInput = form[INPUT_FIELD_NAME][0];
+
+		const output = await this._rot13Client.transformAsync(
 			config.rot13ServicePort,
-			"some text",
+			userInput,
 			config.correlationId,
 		);
+
+		return homePageView.homePage(output);
 	}
 
 }
