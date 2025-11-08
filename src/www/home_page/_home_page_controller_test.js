@@ -91,7 +91,25 @@ describe.only("Home Page Controller", () => {
 
 		// Challenge #7
 		it("fails gracefully, and logs error, when service returns error", async () => {
-			// to do
+			const { response, logOutput } = await postAsync({
+				rot13ServicePort: 9999,
+				rot13Error: "my_error",
+			});
+
+			assert.deepEqual(logOutput.data, [{
+				alert: "emergency",
+				endpoint: "/",
+				method: "POST",
+				message: "ROT-13 service error",
+				error: "Error: Unexpected status from ROT-13 service\n" +
+					"Host: localhost:9999\n" +
+					"Endpoint: /rot13/transform\n" +
+					"Status: 500\n" +
+					"Headers: {}\n" +
+					"Body: my_error",
+			}]);
+
+			assert.deepEqual(response, homePageView.homePage("ROT-13 service failed"), "should render home page");
 		});
 
 		// Challenge #9
@@ -108,8 +126,12 @@ async function postAsync({
 	rot13ServicePort = IRRELEVANT_PORT,
 	correlationId = IRRELEVANT_CORRELATION_ID,
 	rot13Response = "irrelevant ROT-13 response",
-}) {
-	const rot13Client = Rot13Client.createNull([{ response: rot13Response }]);
+	rot13Error = undefined,
+} = {}) {
+	const rot13Client = Rot13Client.createNull([{
+		response: rot13Response,
+		error: rot13Error,
+	}]);
 	const rot13Requests = rot13Client.trackRequests();
 
 	const log = Log.createNull();
